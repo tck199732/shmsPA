@@ -32,86 +32,76 @@
 
 #include "globals.hh"
 
-namespace PAAnalysis
-{
-    /*
-     * Ntuple IDs
-     * ----------
-     * CreateNtuple() assigns IDs in creation order.
-     *
-     * PARunAction creates:
-     *   1. PA     -> ID 0
-     *   2. Tracks -> ID 1
-     */
-    enum NtupleId
-    {
-        kPANtuple     = 0,
-        kTracksNtuple = 1
-    };
+namespace PAAnalysis {
+/*
+ * Ntuple IDs
+ * ----------
+ * CreateNtuple() assigns IDs in creation order.
+ *
+ * PARunAction creates:
+ *   1. PA     -> ID 0
+ *   2. Tracks -> ID 1
+ */
+enum NtupleId { kPANtuple = 0, kTracksNtuple = 1 };
 
-    /*
-     * Columns in the existing PA event tree.
-     *
-     * The original columns retain IDs 0 through 13. The new columns are
-     * appended so existing scripts that depend on the old ordering continue
-     * to work.
-     */
-    namespace PA
-    {
-        enum ColumnId
-        {
-            kS1XTime = 0,
-            kS1YTime,
-            kS2XTime,
-            kS2YTime,
+/*
+ * Columns in the existing PA event tree.
+ *
+ * The original columns retain IDs 0 through 13. The new columns are
+ * appended so existing scripts that depend on the old ordering continue
+ * to work.
+ */
+namespace PA {
+enum ColumnId {
+	kS1XTime = 0,
+	kS1YTime,
+	kS2XTime,
+	kS2YTime,
 
-            kS1XEnergy,
-            kS1YEnergy,
-            kS2XEnergy,
-            kS2YEnergy,
+	kS1XEnergy,
+	kS1YEnergy,
+	kS2XEnergy,
+	kS2YEnergy,
 
-            kS2YNPE,
-            kCopyNo,
-            kAGCNPE,
-            kHGCNPE,
-            kNGCNPE,
-            kCalEnergy,
+	kS2YNPE,
+	kCopyNo,
+	kAGCNPE,
+	kHGCNPE,
+	kNGCNPE,
+	kCalEnergy,
 
-            // New event-level truth columns begin here.
-            kEventID,
-            kPrimaryPDG,
-            kPrimaryReachedCal,
-            kPrimaryExitedCal
-        };
-    }
-
-    /*
-     * Columns in the new Tracks tree.
-     *
-     * One completed, non-optical Geant4 track produces one row.
-     */
-    namespace Tracks
-    {
-        enum ColumnId
-        {
-            kEventID = 0,
-            kTrackID,
-            kParentID,
-            kPDG,
-            kCreatorProcess,
-
-
-            kEndVolume,
-            kEndProcess,
-
-            kReachedS1,
-            kReachedHGC,
-            kReachedAGC,
-            kReachedS2,
-            kReachedCal,
-            kExitedCal
-        };
-    }
+	// New event-level truth columns begin here.
+	kEventID,
+	kPrimaryPDG,
+	kPrimaryReachedCal,
+	kPrimaryExitedCal
+};
 }
+
+/*
+ * Columns in the new Tracks tree.
+ *
+ * One completed, non-optical Geant4 track produces one row.
+ */
+namespace Tracks {
+enum ColumnId {
+	kEventID = 0,
+	kTrackID,
+	kParentID,
+	kPDG,
+	kCreatorProcess,
+
+	kEndVolume,
+	kEndProcess,
+
+	kReachedS1,
+	kReachedHGC,
+	kReachedAGC,
+	kReachedS2,
+	kReachedCal,
+	kExitedCal
+};
+}
+} // namespace PAAnalysis
 
 #endif

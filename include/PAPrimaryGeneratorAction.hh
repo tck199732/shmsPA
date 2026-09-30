@@ -13,40 +13,37 @@ class G4ParticleDefinition;
 /// Primary generator
 ///
 /// A single particle is generated.
-/// User can select 
+/// User can select
 /// - the initial momentum and angle
 /// - the momentum and angle spreads
-/// - random selection of a particle type from proton, kaon+, pi+, muon+, e+ 
+/// - random selection of a particle type from proton, kaon+, pi+, muon+, e+
 
+class PAPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
+public:
+	PAPrimaryGeneratorAction();
+	virtual ~PAPrimaryGeneratorAction();
 
-class PAPrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
-{
-  public:
-    PAPrimaryGeneratorAction();
-    virtual ~PAPrimaryGeneratorAction();
-    
-    virtual void GeneratePrimaries(G4Event*);
+	virtual void GeneratePrimaries(G4Event *);
 
-    void ReadGeneratedEvents();
-    
-    void SetMomentum(G4double val) { fMomentum = val; }
-    G4double GetMomentum() const { return fMomentum; }
+	void ReadGeneratedEvents();
 
-    
-  private:
-    void DefineCommands();
+	void SetMomentum(G4double val) { fMomentum = val; }
+	G4double GetMomentum() const { return fMomentum; }
 
-    G4ParticleGun* fParticleGun;
-    G4GenericMessenger* fMessenger;
-    G4ParticleDefinition* fProton;
-    G4double fMomentum;
+private:
+	void DefineCommands();
 
-    std::vector<double> delta, xfp, yfp, xpfp, ypfp; //event kinematics
-    G4int NEVENTS;
-    G4int nev;
-    G4bool fUseGenerated;
-    G4String fInputFileName = "run5055kine.txt";
-    G4double ztar = -3.13;
+	G4ParticleGun *fParticleGun;
+	G4GenericMessenger *fMessenger;
+	G4ParticleDefinition *fProton;
+	G4double fMomentum;
+
+	std::vector<double> delta, xfp, yfp, xpfp, ypfp; // event kinematics
+	G4int NEVENTS;
+	G4int nev;
+	G4bool fUseGenerated;
+	G4String fInputFileName = "run5055kine.txt";
+	G4double ztar = -3.13;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

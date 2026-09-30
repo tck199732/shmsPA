@@ -10,18 +10,17 @@ class G4TouchableHistory;
 
 /// Hodoscope sensitive detector
 
-class PAHodoscopeSD : public G4VSensitiveDetector
-{
-  public:
-    PAHodoscopeSD(G4String name);
-    virtual ~PAHodoscopeSD();
-    
-    virtual void Initialize(G4HCofThisEvent*HCE);
-    virtual G4bool ProcessHits(G4Step*aStep,G4TouchableHistory*ROhist);
-    
-  private:
-    PAHodoscopeHitsCollection* fHitsCollection;
-    G4int fHCID;
+class PAHodoscopeSD : public G4VSensitiveDetector {
+public:
+	PAHodoscopeSD(G4String name);
+	virtual ~PAHodoscopeSD();
+
+	virtual void Initialize(G4HCofThisEvent *HCE);
+	virtual G4bool ProcessHits(G4Step *aStep, G4TouchableHistory *ROhist);
+
+private:
+	PAHodoscopeHitsCollection *fHitsCollection;
+	G4int fHCID;
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
