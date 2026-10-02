@@ -39,12 +39,10 @@ PADetectorConstruction::PADetectorConstruction() :
 	fS2XLogical(nullptr),
 	fS1YLogical(nullptr),
 	fS2YLogical(nullptr),
-	fSHMSPhys(nullptr)
-
-{
-	fUseNGC = 0;
-	fAeroTray = 10;
-	ReadParameters("detectors.dat");
+	fSHMSPhys(nullptr),
+	fUseNGC(0),
+	fAeroTray(10) {
+	DefineCommands();
 	ConstructMaterials();
 }
 
@@ -161,7 +159,7 @@ G4VPhysicalVolume *PADetectorConstruction::Construct() {
 	// placement depends on Noble Gas enabled or not
 
 	// Noble Gas Cherenkov -----------------------------------------------
-	if (fUseNGC == 1) { // if NGC included in experimental configuration
+	if (fUseNGC) { // if NGC included in experimental configuration
 		// main Cherenkov volume
 		auto NGCSolid = new G4Box("NGCBox", 1.0 * m, 1.0 * m, 1.0 * m); // 200 cm long
 		fNGCLogical = new G4LogicalVolume(NGCSolid, nobleGas, "NGCLogical");
@@ -376,59 +374,14 @@ void PADetectorConstruction::ConstructSD() {
 	fS2YLogical->SetSensitiveDetector(hodoscope2y);
 }
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-// read the NGC option
-void PADetectorConstruction::ReadParameters(const char *file) {
-	// define file contents
-	char *keylist[] = {(char *)"Use-NGC:", (char *)"Aero-Tray:", NULL};
-	enum { ENGC, EAERO, ENULL };
-	G4int ikey, iread;
-	G4int ierr = 0;
-	char line[256];
-	char delim[64];
-	// open the file
-	FILE *pdata;
-	if ((pdata = fopen(file, "r")) == NULL) {
-		printf("Error opening detector parameter file: %s\n", file);
-		return;
-	}
-	// start reading the file
-	while (fgets(line, 256, pdata)) {
-		if (line[0] == '#')
-			continue; // skip commented lines
-		printf("%s\n", line);
-		sscanf(line, "%s", delim);
-		for (ikey = 0; ikey < ENULL; ikey++) // look for the defined keys
-			if (!strcmp(keylist[ikey], delim))
-				break;
-		switch (ikey) {
-		default:
-			// stop running if the file contains something strange
-			printf("Unrecognised delimiter: %s\n", delim);
-			ierr++;
-			break;
-		case ENGC: // dimensions of main target vessel
-			iread = sscanf(
-				line, "%*s%d", // line contains text, one integer
-				&fUseNGC
-			); // assign to this variable
-			if (iread != 1)
-				ierr++;
-			break;
-		case EAERO: // dimensions of main target vessel
-			iread = sscanf(
-				line, "%*s%d", // line contains text, one integer
-				&fAeroTray
-			); // assign to this variable
-			if (iread != 1)
-				ierr++;
-			break;
-		}
-		if (ierr) { // if something strange is in the file, error and exit
-			printf("Fatal Error: invalid read of parameter line %s\n %s\n", keylist[ikey], line);
-			exit(-1);
-		}
-	}
+void PADetectorConstruction::DefineCommands() {
+	fMessenger = new G4GenericMessenger(this, "/PA/detector/", "Detector configuration");
+
+	fMessenger->DeclareProperty("useNGC", fUseNGC, "Noble Gas Cherenkov on/off ");
+	fMessenger->DeclareProperty(
+		"aeroTray", fAeroTray,
+		"which aerogel tray (11, 15, 20, 30); Option 11 for n=1.011, etc. (it also defines density)"
+	);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

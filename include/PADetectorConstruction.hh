@@ -2,6 +2,7 @@
 #define PADetectorConstruction_h 1
 
 #include "G4FieldManager.hh"
+#include "G4GenericMessenger.hh"
 #include "G4NistManager.hh"
 #include "G4RotationMatrix.hh"
 #include "G4VUserDetectorConstruction.hh"
@@ -23,11 +24,12 @@ public:
 
 	virtual G4VPhysicalVolume *Construct();
 	virtual void ConstructSD();
-
 	void ConstructMaterials();
-	void ReadParameters(const char *); // ngc or no ngc
 
 private:
+	void DefineCommands();
+	G4GenericMessenger *fMessenger = nullptr;
+
 	G4LogicalVolume *fNGCLogical;
 	std::vector<G4VisAttributes *> fVisAttributes;
 
@@ -38,7 +40,7 @@ private:
 	G4LogicalVolume *fCalLogical;
 	G4VPhysicalVolume *fSHMSPhys;
 
-	G4int fUseNGC;
+	G4bool fUseNGC;
 	G4int fAeroTray;
 };
 
