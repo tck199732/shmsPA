@@ -8,6 +8,8 @@
 #include "G4SystemOfUnits.hh"
 #include "Randomize.hh"
 
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -16,7 +18,10 @@ PAPrimaryGeneratorAction::PAPrimaryGeneratorAction() :
 	G4VUserPrimaryGeneratorAction(),
 	fParticleGun(nullptr),
 	fMessenger(nullptr),
-	fMomentum(5. * GeV) {
+	fMomentum(5. * GeV),
+	nev(0),
+	NEVENTS(0),
+	fUseGenerated(false) {
 
 	G4int nofParticles = 1;
 	fParticleGun = new G4ParticleGun(nofParticles);
@@ -33,16 +38,7 @@ PAPrimaryGeneratorAction::PAPrimaryGeneratorAction() :
 	fParticleGun->SetParticleMomentumDirection(G4ThreeVector(0, 0, 1));
 	fParticleGun->SetParticleEnergy(Ekin);
 
-	// define commands for this class
 	DefineCommands();
-
-	// read in event parameters from a file
-	// get information at initialization
-	ReadGeneratedEvents();
-	NEVENTS = delta.size();
-	nev = 0;
-
-	fUseGenerated = false;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -55,39 +51,46 @@ PAPrimaryGeneratorAction::~PAPrimaryGeneratorAction() {
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void PAPrimaryGeneratorAction::GeneratePrimaries(G4Event *event) {
-	auto mass = fParticleGun->GetParticleDefinition()->GetPDGMass();
-	// get information
-	if (!fUseGenerated) {
-		// simple, consistent with /gun/ commands
-		fParticleGun->GeneratePrimaryVertex(event);
-	} else {
-		// and generate all the events read in from the file
-		G4double P0 = fMomentum; // read central momentum
-		G4double Pmom = P0 * (1.0 + delta[nev] / 100.);
-		// calculate gun position, momentum
-		G4double posX = xfp[nev] / 100. + xpfp[nev] * ztar; // x at ztar
-		G4double posY = yfp[nev] / 100. + ypfp[nev] * ztar; // y at ztar
-		G4double momX = xpfp[nev];							// dx/dz
-		G4double momY = ypfp[nev];							// dy/dz
-		G4double momZ = 1;									// dz/dz
-		G4double Ekin = sqrt(Pmom * Pmom + mass * mass) - mass;
-		auto Pvec = G4ThreeVector(momX, momY, momZ);
-		auto Xvec = G4ThreeVector(posX * m, posY * m, ztar * m); // default z position
-		// assign these quantities to the event
-		fParticleGun->SetParticleMomentumDirection(Pvec);
-		fParticleGun->SetParticleEnergy(Ekin);
-		fParticleGun->SetParticlePosition(Xvec);
 
+	if (!fUseGenerated) {
 		fParticleGun->GeneratePrimaryVertex(event);
-		// output progress statement
-		if ((nev + 1) % 1000 == 0)
-			G4cout << "Processed " << nev + 1 << " events" << G4endl;
-		// if using the entire file (>163333 events)
-		if (nev == NEVENTS - 1) {
-			G4cout << "End of generated events" << G4endl;
-			return;
-		}
+		nev++;
+		return;
 	}
+
+	if (delta.empty()) {
+		ReadGeneratedEvents();
+		NEVENTS = delta.size();
+		nev = 0;
+	}
+
+	auto mass = fParticleGun->GetParticleDefinition()->GetPDGMass();
+	G4double P0 = fMomentum; // read central momentum
+	G4double Pmom = P0 * (1.0 + delta[nev] / 100.);
+	// calculate gun position, momentum
+	G4double posX = xfp[nev] / 100. + xpfp[nev] * ztar; // x at ztar
+	G4double posY = yfp[nev] / 100. + ypfp[nev] * ztar; // y at ztar
+	G4double momX = xpfp[nev];							// dx/dz
+	G4double momY = ypfp[nev];							// dy/dz
+	G4double momZ = 1;									// dz/dz
+	G4double Ekin = sqrt(Pmom * Pmom + mass * mass) - mass;
+	auto Pvec = G4ThreeVector(momX, momY, momZ);
+	auto Xvec = G4ThreeVector(posX * m, posY * m, ztar * m); // default z position
+	// assign these quantities to the event
+	fParticleGun->SetParticleMomentumDirection(Pvec);
+	fParticleGun->SetParticleEnergy(Ekin);
+	fParticleGun->SetParticlePosition(Xvec);
+
+	fParticleGun->GeneratePrimaryVertex(event);
+	// output progress statement
+	if ((nev + 1) % 1000 == 0)
+		G4cout << "Processed " << nev + 1 << " events" << G4endl;
+	// if using the entire file (>163333 events)
+	if (nev == NEVENTS - 1) {
+		G4cout << "End of generated events" << G4endl;
+		return;
+	}
+
 	nev++;
 }
 
@@ -124,11 +127,19 @@ void PAPrimaryGeneratorAction::ReadGeneratedEvents() {
 	// read genkinfile.txt, which has structure xfp, yfp, xpfp, ypfp, delta
 	std::string line;
 	std::ifstream fin(fInputFileName, std::ios::in);
-	if (!fin.is_open()) {
-		G4cerr << "Can't open file" << G4endl;
-		exit(1);
-	}
 
+	if (!fin.is_open()) {
+		G4ExceptionDescription msg;
+		msg << "Failed to open input file: " << fInputFileName << G4endl
+			<< "Working directory: " << std::filesystem::current_path() << G4endl
+			<< "Absolute path: " << std::filesystem::absolute(fInputFileName.c_str()) << G4endl
+			<< "System error: " << std::strerror(errno);
+
+		G4Exception("PAPrimaryGeneratorAction::ReadGeneratedEvents", "FileOpenError", FatalException, msg);
+		return;
+	} else {
+		G4cout << "Successfully opened input file: " << fInputFileName << G4endl;
+	}
 	// create variables to hold data
 	G4double delta_tmp, xfp_tmp, yfp_tmp, xpfp_tmp, ypfp_tmp;
 
