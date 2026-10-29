@@ -120,6 +120,16 @@ void PAEventAction::EndOfEventAction(const G4Event *event) {
 			);
 		}
 	}
+
+	G4float primaryMomentum = 0.0;
+	if (event->GetNumberOfPrimaryVertex() > 0) {
+		auto vertex = event->GetPrimaryVertex(0);
+		if (vertex && vertex->GetNumberOfParticle() > 0) {
+			auto primary = vertex->GetPrimary(0);
+			primaryMomentum = primary->GetMomentum().mag() / GeV;
+		}
+	}
+
 	// Fill  Ntuple: NPE numbers
 	//  Fill the existing detector-response columns in the PA event tree.
 	analysisManager->FillNtupleIColumn(PAAnalysis::kPANtuple, PAAnalysis::PA::kS2YNPE, S2YNPE);
@@ -140,6 +150,8 @@ void PAEventAction::EndOfEventAction(const G4Event *event) {
 
 	analysisManager->FillNtupleIColumn(PAAnalysis::kPANtuple, PAAnalysis::PA::kPrimaryPDG, PrimaryPDG);
 
+	analysisManager->FillNtupleDColumn(PAAnalysis::kPANtuple, PAAnalysis::PA::kPrimaryMomentum, primaryMomentum);
+
 	analysisManager->FillNtupleIColumn(
 		PAAnalysis::kPANtuple, PAAnalysis::PA::kPrimaryReachedCal, PrimaryReachedCal ? 1 : 0
 	);
@@ -150,31 +162,6 @@ void PAEventAction::EndOfEventAction(const G4Event *event) {
 
 	// Commit exactly one event-level row to PA.
 	analysisManager->AddNtupleRow(PAAnalysis::kPANtuple);
-
-	//
-	// Print diagnostics: for debugging purposes
-	/**
-
-	auto printModulo = G4RunManager::GetRunManager()->GetPrintProgress();
-	if ( printModulo == 0 || event->GetEventID() % printModulo != 0) return;
-
-	auto primary = event->GetPrimaryVertex(0)->GetPrimary(0);
-	G4cout
-	  << G4endl
-	  << ">>> Event " << event->GetEventID() << " >>> Simulation truth : "
-	  << primary->GetG4code()->GetParticleName()
-	  << " " << primary->GetMomentum() << G4endl;
-
-	// Hodoscopes
-	for (G4int iDet = 0; iDet < kDim; ++iDet) {
-	  auto hc = GetHC(event, fHodHCID[iDet]);
-	  if ( ! hc ) return;
-	  G4cout << "Hodoscope " << iDet + 1 << " has " << hc->GetSize()  << " hits." << G4endl;
-	  for (unsigned int i = 0; i<hc->GetSize(); ++i) {
-		hc->GetHit(i)->Print();
-	  }
-	}
-	***/
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

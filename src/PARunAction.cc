@@ -55,6 +55,7 @@ PARunAction::PARunAction(PAEventAction *eventAction) : G4UserRunAction(), fEvent
 		// New columns are appended after the original 14 columns.
 		analysisManager->CreateNtupleIColumn(PAAnalysis::kPANtuple, "EventID");
 		analysisManager->CreateNtupleIColumn(PAAnalysis::kPANtuple, "PrimaryPDG");
+		analysisManager->CreateNtupleDColumn(PAAnalysis::kPANtuple, "PrimaryMomentum");
 		analysisManager->CreateNtupleIColumn(PAAnalysis::kPANtuple, "PrimaryReachedCal");
 		analysisManager->CreateNtupleIColumn(PAAnalysis::kPANtuple, "PrimaryExitedCal");
 

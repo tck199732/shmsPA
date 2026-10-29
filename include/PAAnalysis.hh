@@ -73,6 +73,7 @@ enum ColumnId {
 	// New event-level truth columns begin here.
 	kEventID,
 	kPrimaryPDG,
+	kPrimaryMomentum,
 	kPrimaryReachedCal,
 	kPrimaryExitedCal
 };
